@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 from requests import get
 
 
-#Function that checks indeed for the jobs that match the user desc and location
+#Function that checks Indeed.com for the jobs that match the user desc and location
 def indeed_search(keyword, zipcode):
 
     #Go to Indeed Url using the users preferences and parse the page
@@ -23,9 +23,9 @@ def indeed_search(keyword, zipcode):
     for indeed_job in indeed_all_results:
         try:
             indeed_each_heading = indeed_job.find('h2')
-            indeed_each_link = indeed_each_heading.find('a')['href']
-            indeed_each_link = "https://www.indeed.com"+indeed_each_link
-            indeed_all_link_list.append(indeed_each_link)
+            indeed_add_link = indeed_each_heading.find('a')['href']
+            indeed_add_link = "https://www.indeed.com"+indeed_add_link
+            indeed_all_link_list.append(indeed_add_link)
         except:
             continue
 
@@ -39,17 +39,71 @@ def indeed_search(keyword, zipcode):
         indeed_soup2 = BeautifulSoup(indeed_response.text, 'html.parser')
         type(indeed_soup2)
 
-        #Find title of job and company
-        indeed_job_header_info = indeed_soup2.find('div', class_='jobsearch-DesktopStickyContainer')
-        indeed_job_title = indeed_job_header_info.find('h3')
-        indeed_job_company = indeed_job_header_info.find('div')
-        print (indeed_job_title.text)
-        print (indeed_job_company.text)
+        try:
+            #Find title of job and company
+            indeed_job_header_info = indeed_soup2.find('div', class_='jobsearch-DesktopStickyContainer')
+            indeed_job_title = indeed_job_header_info.find('h3').text
+            indeed_job_company = indeed_job_header_info.find('div').text
+            print (indeed_job_title)
+            print (indeed_job_company)
 
-        #Find container holding all the job description info
-        indeed_description_container = indeed_soup2.find('div', class_='jobsearch-JobComponent-description')
-        print (indeed_description_container.text)
-        return
+            #Find container holding all the job description info
+            indeed_description_container = indeed_soup2.find('div', class_='jobsearch-JobComponent-description').text
+            print (indeed_description_container)
+        except:
+            continue
+
+        #Wait some time after gathering job information
+        time.sleep(1.5)
+
+#Function that checks Ziprecruiter.com for relevant job postings
+def zip_search(keyword, zipcode):
+
+    #Ziprecruiter Url
+    zip_url = "https://www.ziprecruiter.com/candidate/search?radius=25&days=5&search="+keyword+"&location="+zipcode
+    zip_response = get(zip_url)
+    zip_soup = BeautifulSoup(zip_response.text, 'html.parser')
+    type(zip_soup)
+
+    #Finds main job listing container and finds each indivdual job posting
+    zip_all_jobs_container = zip_soup.find('div', id='job_list')
+    zip_each_job_container = zip_all_jobs_container.findChildren('article')
+
+    #indivdual job list for ziprecruiter
+    zip_all_link_list = []
+
+    #For loop that grabs each link from each job posting and puts URL inside of list
+    for zip_each_job in zip_each_job_container:
+        zip_add_link = zip_each_job.find('a')['href']
+        zip_all_link_list.append(zip_add_link)
+
+    #Loop for each link and gather job information from the page
+    for zip_link in zip_all_link_list:
+
+        #Go to indivdual job posting
+        zip_response2 = get(zip_link)
+        zip_soup2 = BeautifulSoup(zip_response2.text, 'html.parser')
+        type(zip_soup2)
+
+        try:
+            #Find job description container
+            zip_job_desc_container = zip_soup2.find('div', class_='job_description')
+
+            #Zip job title/company/location info
+            zip_job_title_container = zip_job_desc_container.find('div', class_='job_header')
+            zip_job_title = zip_job_desc_container.find('h1').text.strip()
+            zip_job_company = zip_job_desc_container.find('span').text.strip()
+            zip_job_location = zip_job_desc_container.find('a', class_='location_text').text.strip()
+
+            print (zip_job_title)
+            print (zip_job_company)
+            print ("")
+            #Find job description
+            zip_job_description = zip_job_desc_container.find('div', class_='jobDescriptionSection').text
+        except:
+            continue
+
+        time.sleep(1.5)
 
 keywords= "software developer"
 zipcode = "38017"
