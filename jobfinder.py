@@ -105,6 +105,48 @@ def zip_search(keyword, zipcode):
 
         time.sleep(1.5)
 
+#Function that checks Monster.com for job postings
+def monster_search(keyword, zipcode):
+
+    #Url for Monster.com main job search
+    monster_url = "https://www.monster.com/jobs/search/?q="+keyword+"&where="+zipcode
+    monster_response = get(monster_url)
+    monster_soup = BeautifulSoup(monster_response.text, 'html.parser')
+    type(monster_soup)
+
+    #Find all job results container, then gather all the job postings
+    monster_all_jobs_container = monster_soup.find('div', id='SearchResults')
+    monster_all_jobs = monster_all_jobs_container.findChildren('section')
+
+    #List for all monster job urls to be used for indivdual search
+    monster_all_link_list = []
+
+    #Loop that goes through each job posting found, extracts its URL, then places it into a list for later use
+    for monster_each_job in monster_all_jobs:
+        try:
+            monster_add_link = monster_each_job.find('a')['href']
+            monster_all_link_list.append(monster_add_link)
+        except:
+            continue
+
+    for monster_link in monster_all_link_list:
+        count += 1
+        #Go to each individual job posting page
+        monster_response2 = get(monster_link)
+        monster_soup2 = BeautifulSoup(monster_response2.text, 'html.parser')
+        type(monster_soup2)
+
+        try:
+            #Find Job title and company
+            monster_job_title_company = monster_soup2.find('div', class_='heading').find('h1').text.strip()
+
+            #Find job description
+            monster_job_description = monster_soup2.find('div', class_='details-content').text.strip()
+
+        except:
+            continue
+        return
+
 keywords= "software developer"
 zipcode = "38017"
-indeed_search(keywords, zipcode)
+monster_search(keywords, zipcode)
