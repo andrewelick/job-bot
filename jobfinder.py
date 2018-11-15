@@ -5,10 +5,10 @@ from requests import get
 
 
 #Function that checks Indeed.com for the jobs that match the user desc and location
-def indeed_search(keywords, zipcode):
+def indeed_search(keywords, zipcode, job_radius, date_search):
 
     #Go to Indeed Url using the users preferences and parse the page
-    indeed_url= "https://www.indeed.com/jobs?as_and="+keywords+"&as_phr=&as_any=&as_not=&as_ttl=&as_cmp=&jt=all&st=&as_src=&salary=&radius=25&l="+zipcode+"&fromage=3&limit=50&sort=date&psf=advsrch"
+    indeed_url= "https://www.indeed.com/jobs?as_and="+keywords+"&as_phr=&as_any=&as_not=&as_ttl=&as_cmp=&jt=all&st=&as_src=&salary=&radius="+job_radius+"&l="+zipcode+"&fromage="+date_search+"&limit=50&sort=date&psf=advsrch"
     indeed_response = get(indeed_url)
     indeed_soup = BeautifulSoup(indeed_response.text, 'html.parser')
     type(indeed_soup)
@@ -117,10 +117,11 @@ def zip_search(keywords, zipcode):
         time.sleep(1.5)
 
 #Function that checks Monster.com for job postings
-def monster_search(keywords, zipcode):
+def monster_search(keywords, zipcode, monster_radius, date_search):
 
     #Url for Monster.com main job search
-    monster_url = "https://www.monster.com/jobs/search/?q="+keywords+"&where="+zipcode
+    monster_url = "https://www.monster.com/jobs/search/?q="+keywords+"&intcid=skr_navigation_nhpso_searchMain&rad="+monster_radius+"&where="+zipcode+"&tm=0"
+    print (monster_url)
     monster_response = get(monster_url)
     monster_soup = BeautifulSoup(monster_response.text, 'html.parser')
     type(monster_soup)
@@ -154,13 +155,51 @@ def monster_search(keywords, zipcode):
             #Find job description
             monster_job_description = monster_soup2.find('div', class_='details-content').text.strip()
             monster_job_description = textwrap.wrap(monster_job_description, 100)
-            
+
             print (monster_job_title_company)
             print (monster_job_description)
         except:
             continue
         return
 
+#Function to handle user inputs and format them so that each website can use them correctly
+def user_input_handler(keywords, zipcode, job_radius, date_search):
+
+    #Adjust job radius variable so that each website url will work
+    #Indeed job radius
+    if job_radius == 5:
+        indeed_radius = "1"
+        zip_radius = "5"
+        monster_radius = "5"
+    elif job_radius == 10:
+        indeed_radius = "10"
+        zip_radius = "10"
+        monster_radius = "10"
+    elif job_radius == 15:
+        indeed_radius = "15"
+        zip_radius = "25" #No 15 mile radius for ziprecruiter, bumping up to 25 miles
+        monster_radius = "20" #No 15 mile radius for Monster, bumping to 20 miles
+    elif job_radius == 25:
+        indeed_radius = "25"
+        zip_radius = "25"
+        monster_radius = "30" #No 25 mile radius for Monster, bumping to 30 miles
+    elif job_radius == 50:
+        indeed_radius = "50"
+        zip_radius = "50"
+        monster_radius = "50"
+    elif job_radius == 100:
+        indeed_radius = "100"
+        zip_radius = "100"
+        monster_radius = "100"
+    else:
+        indeed_radius = ""
+        zip_radius = "5000"
+        monster_radius = "200"
+
+
 keywords= "software developer"
 zipcode = "38017"
-zip_search(keywords, zipcode)
+job_radius = 5
+date_search = "1"
+
+user_input_handler(keywords, zipcode, job_radius, date_search)
