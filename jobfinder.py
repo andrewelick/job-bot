@@ -1,10 +1,11 @@
 import time
+import textwrap
 from bs4 import BeautifulSoup
 from requests import get
 
 
 #Function that checks Indeed.com for the jobs that match the user desc and location
-def indeed_search(keyword, zipcode):
+def indeed_search(keywords, zipcode):
 
     #Go to Indeed Url using the users preferences and parse the page
     indeed_url= "https://www.indeed.com/jobs?as_and="+keywords+"&as_phr=&as_any=&as_not=&as_ttl=&as_cmp=&jt=all&st=&as_src=&salary=&radius=25&l="+zipcode+"&fromage=3&limit=50&sort=date&psf=advsrch"
@@ -44,23 +45,29 @@ def indeed_search(keyword, zipcode):
             indeed_job_header_info = indeed_soup2.find('div', class_='jobsearch-DesktopStickyContainer')
             indeed_job_title = indeed_job_header_info.find('h3').text
             indeed_job_company = indeed_job_header_info.find('div').text
-            print (indeed_job_title)
-            print (indeed_job_company)
 
             #Find container holding all the job description info
             indeed_description_container = indeed_soup2.find('div', class_='jobsearch-JobComponent-description').text
-            print (indeed_description_container)
+            indeed_description_container = textwrap.fill(indeed_description_container, 100)
         except:
             continue
 
+        try:
+            print (indeed_job_title)
+            print (indeed_job_company)
+            print (indeed_description_container)
+        except Exception as error:
+            print (error)
+
+        return
         #Wait some time after gathering job information
         time.sleep(1.5)
 
 #Function that checks Ziprecruiter.com for relevant job postings
-def zip_search(keyword, zipcode):
+def zip_search(keywords, zipcode):
 
     #Ziprecruiter Url
-    zip_url = "https://www.ziprecruiter.com/candidate/search?radius=25&days=5&search="+keyword+"&location="+zipcode
+    zip_url = "https://www.ziprecruiter.com/candidate/search?radius=25&days=5&search="+keywords+"&location="+zipcode
     zip_response = get(zip_url)
     zip_soup = BeautifulSoup(zip_response.text, 'html.parser')
     type(zip_soup)
@@ -95,21 +102,25 @@ def zip_search(keyword, zipcode):
             zip_job_company = zip_job_desc_container.find('span').text.strip()
             zip_job_location = zip_job_desc_container.find('a', class_='location_text').text.strip()
 
+            #Find job description
+            zip_job_description = zip_job_desc_container.find('div', class_='jobDescriptionSection').text.strip()
+            zip_job_description = textwrap.fill(zip_job_description, 100)
+
             print (zip_job_title)
             print (zip_job_company)
+            print (zip_job_description)
             print ("")
-            #Find job description
-            zip_job_description = zip_job_desc_container.find('div', class_='jobDescriptionSection').text
         except:
             continue
 
+        return
         time.sleep(1.5)
 
 #Function that checks Monster.com for job postings
-def monster_search(keyword, zipcode):
+def monster_search(keywords, zipcode):
 
     #Url for Monster.com main job search
-    monster_url = "https://www.monster.com/jobs/search/?q="+keyword+"&where="+zipcode
+    monster_url = "https://www.monster.com/jobs/search/?q="+keywords+"&where="+zipcode
     monster_response = get(monster_url)
     monster_soup = BeautifulSoup(monster_response.text, 'html.parser')
     type(monster_soup)
@@ -130,7 +141,7 @@ def monster_search(keyword, zipcode):
             continue
 
     for monster_link in monster_all_link_list:
-        count += 1
+
         #Go to each individual job posting page
         monster_response2 = get(monster_link)
         monster_soup2 = BeautifulSoup(monster_response2.text, 'html.parser')
@@ -142,11 +153,14 @@ def monster_search(keyword, zipcode):
 
             #Find job description
             monster_job_description = monster_soup2.find('div', class_='details-content').text.strip()
-
+            monster_job_description = textwrap.wrap(monster_job_description, 100)
+            
+            print (monster_job_title_company)
+            print (monster_job_description)
         except:
             continue
         return
 
 keywords= "software developer"
 zipcode = "38017"
-monster_search(keywords, zipcode)
+zip_search(keywords, zipcode)
