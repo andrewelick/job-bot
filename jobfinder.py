@@ -5,10 +5,10 @@ from requests import get
 
 
 #Function that checks Indeed.com for the jobs that match the user desc and location
-def indeed_search(keywords, zipcode, job_radius, date_search):
+def indeed_search(keywords, zipcode, job_radius, job_posted):
 
     #Go to Indeed Url using the users preferences and parse the page
-    indeed_url= "https://www.indeed.com/jobs?as_and="+keywords+"&as_phr=&as_any=&as_not=&as_ttl=&as_cmp=&jt=all&st=&as_src=&salary=&radius="+job_radius+"&l="+zipcode+"&fromage="+date_search+"&limit=50&sort=date&psf=advsrch"
+    indeed_url= "https://www.indeed.com/jobs?as_and="+keywords+"&as_phr=&as_any=&as_not=&as_ttl=&as_cmp=&jt=all&st=&as_src=&salary=&radius="+job_radius+"&l="+zipcode+"&fromage="+job_posted+"&limit=50&sort=date&psf=advsrch"
     indeed_response = get(indeed_url)
     indeed_soup = BeautifulSoup(indeed_response.text, 'html.parser')
     type(indeed_soup)
@@ -67,7 +67,7 @@ def indeed_search(keywords, zipcode, job_radius, date_search):
 def zip_search(keywords, zipcode):
 
     #Ziprecruiter Url
-    zip_url = "https://www.ziprecruiter.com/candidate/search?radius=25&days=5&search="+keywords+"&location="+zipcode
+    zip_url = "https://www.ziprecruiter.com/candidate/search?radius=25&days="+zip_posted+"&search="+keywords+"&location="+zipcode
     zip_response = get(zip_url)
     zip_soup = BeautifulSoup(zip_response.text, 'html.parser')
     type(zip_soup)
@@ -117,10 +117,10 @@ def zip_search(keywords, zipcode):
         time.sleep(1.5)
 
 #Function that checks Monster.com for job postings
-def monster_search(keywords, zipcode, monster_radius, date_search):
+def monster_search(keywords, zipcode, monster_radius, job_posted):
 
     #Url for Monster.com main job search
-    monster_url = "https://www.monster.com/jobs/search/?q="+keywords+"&intcid=skr_navigation_nhpso_searchMain&rad="+monster_radius+"&where="+zipcode+"&tm=0"
+    monster_url = "https://www.monster.com/jobs/search/?q="+keywords+"&intcid=skr_navigation_nhpso_searchMain&rad="+monster_radius+"&where="+zipcode+"&tm="+monster_posted
     print (monster_url)
     monster_response = get(monster_url)
     monster_soup = BeautifulSoup(monster_response.text, 'html.parser')
@@ -163,12 +163,11 @@ def monster_search(keywords, zipcode, monster_radius, date_search):
         return
 
 #Function to handle user inputs and format them so that each website can use them correctly
-def user_input_handler(keywords, zipcode, job_radius, date_search):
+def user_input_handler(keywords, zipcode, job_radius, job_posted):
 
-    #Adjust job radius variable so that each website url will work
-    #Indeed job radius
+    #Adjust job radius to work with each website
     if job_radius == 5:
-        indeed_radius = "1"
+        indeed_radius = "5"
         zip_radius = "5"
         monster_radius = "5"
     elif job_radius == 10:
@@ -196,10 +195,29 @@ def user_input_handler(keywords, zipcode, job_radius, date_search):
         zip_radius = "5000"
         monster_radius = "200"
 
+    #Format the job_posted time to work with each website
+    if job_posted == 0: #Within 24 hours
+        indeed_posted = "1"
+        zip_posted = "1"
+        monster_posted = "1"
+    elif job_posted == 1: #Last 3 days
+        indeed_posted = "3"
+        zip_posted = "5" #No 3 day option, pushing up to 5 days
+        monster_posted = "3"
+    elif job_posted == "2": #Last 7 Days
+        indeed_posted = "7"
+        zip_posted = "10" #No 7 day option, pushing up to 10 days
+        monster_posted = "7"
+    else: #Anytime
+        indeed_posted = "any"
+        zip_posted = ""
+        monster_posted = ""
 
+
+    indeed_search(keywords, zipcode, indeed_radius, indeed_posted)
 keywords= "software developer"
 zipcode = "38017"
 job_radius = 5
-date_search = "1"
+job_posted = 0
 
-user_input_handler(keywords, zipcode, job_radius, date_search)
+user_input_handler(keywords, zipcode, job_radius, job_posted)
